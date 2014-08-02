@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+		<title>Concurrent integration test - multi</title>
+		<meta name="description" content="">
+		<meta name="author" content="Arnthor">
+
+		<meta name="viewport" content="width=device-width; initial-scale=1.0">
+	</head>
+
+	<body>	
+		<p><span id="res"></span></p>
+		
+		<script id="worker1" type="javascript/worker">
+			//Cos^2 x
+			var CosPowerTwoX = (function(){
+				return {
+					isPointAccepted: function(fR, xR){
+						return fR <= (Math.cos(xR) * Math.cos(xR));
+					}
+				};
+			})();
+			
+			var xMax, yMax, trialCount;
+			var localAccepted = 0;
+			
+			addEventListener("message", function(e){
+				console.log(e.data);
+			
+				if(e.data.cmd == 'start'){
+					xMax = e.data.xMax;
+					yMax = e.data.yMax;
+					trialCount = e.data.trialCount;
+					
+					computeResult();
+				}
+			});
+			
+			function computeResult(){
+				for(var i=0; i<trialCount; i++){
+					var xR = Math.random() * xMax;
+					var fR = Math.random() * yMax;
+					
+					if(CosPowerTwoX.isPointAccepted(fR,xR))
+						localAccepted++;
+				}
+				
+				postMessage(localAccepted);
+				postMessage("finished");
+			}
+		</script>
+		
+		<script src='js/main_multi.js'></script>
+	</body>
+</html>
